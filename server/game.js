@@ -280,7 +280,7 @@ export class Game {
             bullets: Array.from(this.bullets),
             teamPoint: this.teamPoint,
         }));
-        this.sendTextFrame(socket, JSON.stringify({ "type": "updateYourPower", "power": this.playerStates.get(player.id).power }));
+        sendTextFrame(socket, JSON.stringify({ "type": "updateYourPower", "power": this.playerStates.get(player.id).power }));
         this.broadcast(false, socket, { type: "playerJoined", player: player });
     }
 
