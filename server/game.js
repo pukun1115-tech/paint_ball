@@ -67,7 +67,7 @@ export class Game {
                 if (this.time - playerState.recoveredPowerTime >= PLAYER_POWER_COOLDOWN) {
                     playerState.power = Math.min(playerState.power + PLAYER_RECOVER_POWER, PLAYER_MAX_POWER);
                     playerState.recoveredPowerTime = this.time;
-                    this.broadcast(true, null, { "type": "updateYourPower", "power": playerState.power });
+                    this.sendTextFrame(socket, JSON.stringify({ "type": "updateYourPower", "power": playerState.power }));
                 }
             }
 
@@ -95,14 +95,17 @@ export class Game {
             }
 
             if (playerInput.isPainting) {
-                if (playerState.power > 0) {
-                    this.paintTile(player.team, tileX, tileY);
+                if (playerState.power >= 5) {
                     playerState.power -= 5;
+                    this.sendTextFrame(socket, JSON.stringify({ "type": "updateYourPower", "power": playerState.power }));
+                    this.paintTile(player.team, tileX, tileY);
                 }
             }
 
             if (playerInput.isShooting) {
-                if (this.time - this.playerStates.get(id).shootedTime >= SHOOT_COOLDOWN) {
+                if (this.time - playerState.shootedTime >= SHOOT_COOLDOWN && playerState.power >= 1) {
+                    playerState.power -= 1;
+                    this.sendTextFrame(socket, JSON.stringify({ "type": "updateYourPower", "power": playerState.power }));
                     const bullet = {
                         id: id,
                         x: player.x + player.directionX * PLAYER_RADIUS,
@@ -113,7 +116,7 @@ export class Game {
                         hasHit: false,
                     };
                     this.bullets.add(bullet);
-                    this.playerStates.get(id).shootedTime = this.time;
+                    playerState.shootedTime = this.time;
                     player.shooted = true;
                     setTimeout(() => {
                         player.shooted = false;
@@ -277,7 +280,7 @@ export class Game {
             bullets: Array.from(this.bullets),
             teamPoint: this.teamPoint,
         }));
-        this.broadcast(true, null, { "type": "updateYourPower", "power": this.playerStates.get(player.id).power });
+        this.sendTextFrame(socket, JSON.stringify({ "type": "updateYourPower", "power": this.playerStates.get(player.id).power }));
         this.broadcast(false, socket, { type: "playerJoined", player: player });
     }
 
