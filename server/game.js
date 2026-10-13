@@ -86,10 +86,12 @@ export class Game {
                 if (this.map[tileY][tileX] === ".") {
                     this.paintTile(player.team, tileX, tileY);
                     this.teamPoint[player.team]++;
+                    this.broadcast(true, null, { "type": "updateMap", "color": player.team, "tileX": tileX, "tileY": tileY });
                 } else if (this.map[tileY][tileX] === ENEMY_TEAM[player.team]) {
                     this.paintTile(player.team, tileX, tileY);
                     this.teamPoint[player.team]++;
                     this.teamPoint[ENEMY_TEAM[player.team]]--;
+                    this.broadcast(true, null, { "type": "updateMap", "color": player.team, "tileX": tileX, "tileY": tileY });
                 }
             }
 
@@ -150,7 +152,6 @@ export class Game {
         }
         this.broadcast(true, null, { "type": "updatePlayers", "players": Array.from(this.players.values()) });
         this.broadcast(true, null, { "type": "updateBullets", "bullets": Array.from(this.bullets.values()) });
-        this.broadcast(true, null, { "type": "updateMap", "map": this.map });
         this.broadcast(true, null, { "type": "updateTeamPoint", "teamPoint": this.teamPoint });
         this.tick();
     }

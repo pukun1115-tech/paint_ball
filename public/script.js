@@ -106,7 +106,9 @@ import { drawMap, drawPlayers, drawBullets, drawTeamPoint } from "./modules/draw
         } else if (data.type === "updateBullets") {
             gameState.bullets = new Set(data.bullets);
         } else if (data.type === "updateMap") {
-            gameState.map = data.map;
+            const nowStr = gameState.map[data.tileY];
+            const newStr = nowStr.slice(0, data["tileX"]) + data["color"] + nowStr.slice(data["tileX"] + 1);
+            gameState.map[data["tileY"]] = newStr;
         } else if (data.type === "updateTeamPoint") {
             gameState.teamPoint = data.teamPoint;
         } else if (data.type === "playerJoined") {
