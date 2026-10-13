@@ -11,8 +11,10 @@ export const MIME_TYPES = {
     ".ico": "image/x-icon",
 };
 
-export const TEXT_OPCODE = 0b00000001;
-export const CLOSE_OPCODE = 0b00001000;
+export const TEXT_OPCODE = 0b0001;
+export const CLOSE_OPCODE = 0b1000;
+export const PING_OPCODE = 0b1001;
+export const PONG_OPCODE = 0b1010;
 
 export const MAX_BUFFER_SIZE = 512 * 512;
 

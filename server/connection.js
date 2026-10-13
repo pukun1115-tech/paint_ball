@@ -1,8 +1,16 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
-import { DEFAULT_PATH, MIME_TYPES, PUBLIC_FILES, TEXT_OPCODE, CLOSE_OPCODE } from "./config.js";
-import { MAX_BUFFER_SIZE } from "./config.js";
+import {
+    DEFAULT_PATH,
+    MIME_TYPES,
+    PUBLIC_FILES,
+    MAX_BUFFER_SIZE,
+    TEXT_OPCODE,
+    CLOSE_OPCODE,
+    PING_OPCODE,
+    PONG_OPCODE,
+} from "./config.js";
 
 export function createHttpServer(request, response) {
     const requestUrl = (request.url === "/" ? "/index.html" : request.url);
@@ -116,11 +124,28 @@ function sendCloseFrame(socket, statusCode = 1000, reason = "") {
     }
 }
 
-function decodeTextFrame(frame) {
+function sendPongFrame(socket, payload = Buffer.alloc(0)) {
+    if (payload.length > 125) {
+        console.error("the pong payload must not be more than 125bytes");
+        return;
+    }
+    const FIN = 0b10000000;
+    const frame = Buffer.alloc(2 + payload.length);
+    frame[0] = FIN | PONG_OPCODE;
+    frame[1] = payload.length;
+    payload.copy(frame, 2);
+    if (socket.writable) {
+        socket.write(frame);
+    }
+}
+
+function decodeFramePayload(frame) {
     const secondByte = frame[1];
     const lengthCode = secondByte & 0b01111111;
+
     let payloadLength;
     let payloadStartIndex;
+
     if (lengthCode <= 125) {
         payloadLength = lengthCode;
         payloadStartIndex = 6;
@@ -130,14 +155,30 @@ function decodeTextFrame(frame) {
     } else {
         return null;
     }
+
     const maskingKeyStartIndex = payloadStartIndex - 4;
-    const maskingKey = frame.subarray(maskingKeyStartIndex, maskingKeyStartIndex + 4);
-    const maskedPayload = frame.subarray(payloadStartIndex, payloadStartIndex + payloadLength);
+    const maskingKey = frame.subarray(
+        maskingKeyStartIndex,
+        maskingKeyStartIndex + 4
+    );
+
+    const maskedPayload = frame.subarray(
+        payloadStartIndex,
+        payloadStartIndex + payloadLength
+    );
+
     const decodedPayload = Buffer.alloc(payloadLength);
+
     for (let i = 0; i < payloadLength; i++) {
         decodedPayload[i] = maskedPayload[i] ^ maskingKey[i % 4];
     }
-    return decodedPayload.toString("utf8");
+
+    return decodedPayload;
+}
+
+function decodeTextFrame(frame) {
+    const payload = decodeFramePayload(frame);
+    return payload === null ? null : payload.toString("utf8");
 }
 
 function extractFrame(buffer) {
@@ -152,8 +193,23 @@ function extractFrame(buffer) {
     const masked = (secondByte >> 7) === 1;
     const lengthCode = secondByte & 0b01111111;
 
-    if (!fin || (opcode !== 0b0001 && opcode !== 0b1000) || !masked) {
+    const isTextFrame = (opcode === TEXT_OPCODE);
+    const isCloseFrame = (opcode === CLOSE_OPCODE);
+    const isPingFrame = (opcode === PING_OPCODE);
+    const isPongFrame = (opcode === PONG_OPCODE);
+
+    if (
+        !fin ||
+        (!isTextFrame && !isCloseFrame && !isPingFrame && !isPongFrame) ||
+        !masked
+    ) {
         console.error("Invalid WebSocket frame");
+        return null;
+    }
+
+    const isControlFrame = (isCloseFrame || isPingFrame || isPongFrame);
+    if (isControlFrame && lengthCode > 125) {
+        console.error("Invalid WebSocket control frame");
         return null;
     }
 
@@ -206,6 +262,17 @@ function processReceivedBuffer(socket, buffer, game) {
             sendCloseFrame(socket, 1000, "正常終了");
             socket.end();
             return null;
+        } else if (opcode === PING_OPCODE) {
+            const payload = decodeFramePayload(frame);
+
+            if (payload === null) {
+                socket.destroy();
+                return null;
+            }
+
+            sendPongFrame(socket, payload);
+        } else if (opcode === PONG_OPCODE) {
+            //
         } else if (opcode === 0b0001) {
             const text = decodeTextFrame(frame);
             if (text === null) {
