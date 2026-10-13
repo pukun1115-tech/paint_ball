@@ -109,5 +109,5 @@ export function drawMyPower(ctx, myPower) {
     }
     ctx.strokeRect(ctx.canvas.width - 36, ctx.canvas.height - 132, 24, 120);
     const powerHeight = Math.max(0, Math.min(120, 120 * (myPower / 100)));
-    ctx.fillRect(ctx.canavs.width - 36, ctx.canvas.height - 12 - powerHeight, 24, powerHeight);
+    ctx.fillRect(ctx.canvas.width - 36, ctx.canvas.height - 12 - powerHeight, 24, powerHeight);
 }
