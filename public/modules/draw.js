@@ -76,7 +76,7 @@ export function drawPlayers(ctx, you, players) {
         } else {
             ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
         }
-        const hpWidth = Math.max(0, Math.min(PLAYER_RADIUS * 2, (players.get(p).hp / PLAYER_MAX_HP) * PLAYER_RADIUS * 2));
+        const hpWidth = Math.max(0, Math.min(PLAYER_RADIUS * 2, PLAYER_RADIUS * 2 * (players.get(p).hp / PLAYER_MAX_HP)));
         ctx.fillRect(playerCenterX - PLAYER_RADIUS, playerCenterY - PLAYER_RADIUS * 2, hpWidth, PLAYER_RADIUS / 2);
     }
 }
@@ -95,4 +95,19 @@ export function drawTeamPoint(ctx, teamPoint) {
     ctx.fillStyle = "rgba(255, 255, 255, 1)";
     ctx.fillText(teamPoint["R"], centerX - 32, 24);
     ctx.fillText(teamPoint["B"], centerX + 32, 24);
+}
+
+export function drawMyPower(ctx, myPower) {
+    ctx.strokeStyle = "rgba(255, 255, 255, 1)";
+    ctx.lineWidth = 2;
+    if (myPower >= 80) {
+        ctx.fillStyle = "rgba(0, 255, 0, 0.5)";
+    } else if (myPower >= 30) {
+        ctx.fillStyle = "rgba(255, 255, 0, 0.5)";
+    } else {
+        ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
+    }
+    ctx.strokeRect(ctx.canvas.width - 36, ctx.canvas.height - 132, 24, 120);
+    const powerHeight = Math.max(0, Math.min(120, 120 * (myPower / 100)));
+    ctx.fillRect(ctx.canavs.width - 36, ctx.canvas.height - 12 - powerHeight, 24, powerHeight);
 }
