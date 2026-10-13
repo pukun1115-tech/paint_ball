@@ -1,5 +1,6 @@
 import { addMessage, messageInput, sendButton, sendMessage } from "./modules/chat.js";
 import { drawMap, drawPlayers, drawBullets, drawTeamPoint } from "./modules/draw.js";
+import { PLAYER_MAX_POWER } from "./modules/config.js";
 (() => {
     const websocketProtocol = ((window.location.protocol === "https:") ? "wss:" : "ws:");
     const socket = new WebSocket(`${websocketProtocol}//${window.location.host}`);
@@ -22,6 +23,7 @@ import { drawMap, drawPlayers, drawBullets, drawTeamPoint } from "./modules/draw
         players: new Map(),
         bullets: new Set(),
         myId: null,
+        myPower: 100,
         map: [],
         teamPoint: null,
     };
@@ -120,6 +122,8 @@ import { drawMap, drawPlayers, drawBullets, drawTeamPoint } from "./modules/draw
             addMessage(`${data.died} was killed by ${data.killer}.`);
         } else if (data.type === "playerRespawn") {
             gameState.players.set(data.player.id, data.player);
+        } else if (data.type === "updateYourPower") {
+            gameState.myPower = data.power;
         }
     });
 

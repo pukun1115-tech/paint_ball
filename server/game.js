@@ -16,6 +16,9 @@ import {
     BULLET_DAMAGE,
     PLAYER_RECOVER_HP,
     PLAYER_HP_COOLDOWN,
+    PLAYER_MAX_POWER,
+    PLAYER_POWER_COOLDOWN,
+    PLAYER_RECOVER_POWER,
 } from "./config.js";
 
 export class Game {
@@ -41,6 +44,7 @@ export class Game {
                 continue;
             }
             const player = this.players.get(id);
+            const playerState = this.playerStates.get(id);
             const tileX = Math.floor(player.x / TILE_SIZE);
             const tileY = Math.floor(player.y / TILE_SIZE);
 
@@ -53,9 +57,17 @@ export class Game {
             }
 
             if (player.hp < PLAYER_MAX_HP) {
-                if (this.time - this.playerStates.get(id).recoveredTime >= PLAYER_HP_COOLDOWN) {
+                if (this.time - playerState.recoveredHpTime >= PLAYER_HP_COOLDOWN) {
                     player.hp = Math.min(player.hp + PLAYER_RECOVER_HP, PLAYER_MAX_HP);
-                    this.playerStates.get(id).recoveredTime = this.time;
+                    playerState.recoveredHpTime = this.time;
+                }
+            }
+
+            if (playerState.power < PLAYER_MAX_POWER) {
+                if (this.time - playerState.recoveredPowerTime >= PLAYER_POWER_COOLDOWN) {
+                    playerState.power = Math.min(playerState.power + PLAYER_RECOVER_POWER, PLAYER_MAX_POWER);
+                    playerState.recoveredPowerTime = this.time;
+                    this.broadcast(true, null, { "type": "updateYourPower", "power": playerState.power });
                 }
             }
 
@@ -83,7 +95,10 @@ export class Game {
             }
 
             if (playerInput.isPainting) {
-                this.paintTile(player.team, tileX, tileY);
+                if (playerState.power > 0) {
+                    this.paintTile(player.team, tileX, tileY);
+                    playerState.power -= 5;
+                }
             }
 
             if (playerInput.isShooting) {
@@ -249,7 +264,10 @@ export class Game {
         this.playerStates.set(player.id, {
             shootedTime: this.time,
             paintedTime: this.time,
-            recoveredTime: this.time,
+            recoveredHpTime: this.time,
+            power: PLAYER_MAX_POWER,
+            recoveredPowerTime: this.time,
+
         });
         sendTextFrame(socket, JSON.stringify({
             type: "init",
@@ -259,6 +277,7 @@ export class Game {
             bullets: Array.from(this.bullets),
             teamPoint: this.teamPoint,
         }));
+        this.broadcast(true, null, { "type": "updateYourPower", "power": this.playerStates.get(player.id).power });
         this.broadcast(false, socket, { type: "playerJoined", player: player });
     }
 
