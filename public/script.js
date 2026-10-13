@@ -1,5 +1,5 @@
 import { addMessage, messageInput, sendButton, sendMessage } from "./modules/chat.js";
-import { drawMap, drawPlayers, drawBullets, drawTeamPoint } from "./modules/draw.js";
+import { drawMap, drawPlayers, drawBullets, drawTeamPoint, drawMyPower } from "./modules/draw.js";
 import { PLAYER_MAX_POWER } from "./modules/config.js";
 (() => {
     const websocketProtocol = ((window.location.protocol === "https:") ? "wss:" : "ws:");
@@ -195,6 +195,7 @@ import { PLAYER_MAX_POWER } from "./modules/config.js";
         drawBullets(ctx, you, gameState.bullets);
         drawPlayers(ctx, you, gameState.players);
         drawTeamPoint(ctx, gameState.teamPoint);
+        drawMyPower(ctx, gameState.myPower);
     }
 
     function mainLoop() {
