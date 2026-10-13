@@ -67,7 +67,7 @@ export class Game {
                 if (this.time - playerState.recoveredPowerTime >= PLAYER_POWER_COOLDOWN) {
                     playerState.power = Math.min(playerState.power + PLAYER_RECOVER_POWER, PLAYER_MAX_POWER);
                     playerState.recoveredPowerTime = this.time;
-                    sendTextFrame(this.sockets.get(id), JSON.stringify({ "type": "updateYourPower", "power": playerState.power }));
+                    sendTextFrame(this.connections.sockets.get(id), JSON.stringify({ "type": "updateYourPower", "power": playerState.power }));
                 }
             }
 
@@ -98,7 +98,7 @@ export class Game {
                 if (playerState.power >= 5) {
                     playerState.power -= 5;
                     playerState.recoveredPowerTime = this.time;
-                    sendTextFrame(this.sockets.get(id), JSON.stringify({ "type": "updateYourPower", "power": playerState.power }));
+                    sendTextFrame(this.connections.sockets.get(id), JSON.stringify({ "type": "updateYourPower", "power": playerState.power }));
                     this.paintTile(player.team, tileX, tileY);
                 }
             }
@@ -107,7 +107,7 @@ export class Game {
                 if (this.time - playerState.shootedTime >= SHOOT_COOLDOWN && playerState.power >= 1) {
                     playerState.power -= 1;
                     playerState.recoveredPowerTime = this.time;
-                    sendTextFrame(this.sockets.get(id), JSON.stringify({ "type": "updateYourPower", "power": playerState.power }));
+                    sendTextFrame(this.connections.sockets.get(id), JSON.stringify({ "type": "updateYourPower", "power": playerState.power }));
                     const bullet = {
                         id: id,
                         x: player.x + player.directionX * PLAYER_RADIUS,
