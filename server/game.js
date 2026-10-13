@@ -83,16 +83,7 @@ export class Game {
             }
 
             if (playerInput.isPainting) {
-                if (this.map[tileY][tileX] === ".") {
-                    this.paintTile(player.team, tileX, tileY);
-                    this.teamPoint[player.team]++;
-                    this.broadcast(true, null, { "type": "updateMap", "color": player.team, "tileX": tileX, "tileY": tileY });
-                } else if (this.map[tileY][tileX] === ENEMY_TEAM[player.team]) {
-                    this.paintTile(player.team, tileX, tileY);
-                    this.teamPoint[player.team]++;
-                    this.teamPoint[ENEMY_TEAM[player.team]]--;
-                    this.broadcast(true, null, { "type": "updateMap", "color": player.team, "tileX": tileX, "tileY": tileY });
-                }
+                this.paintTile(player.team, tileX, tileY);
             }
 
             if (playerInput.isShooting) {
@@ -119,6 +110,9 @@ export class Game {
         for (const bullet of this.bullets) {
             if (bullet.hasHit) {
                 this.bullets.delete(bullet);
+                if (this.map[Math.floor(bullet.y / TILE_SIZE)][Math.floor(bullet.x / TILE_SIZE)] !== "#") {
+                    this.paintTile(bullet.team, Math.floor(bullet.x / TILE_SIZE), Math.floor(bullet.y / TILE_SIZE));
+                }
                 continue;
             }
             let hasHit = false;
@@ -152,7 +146,6 @@ export class Game {
         }
         this.broadcast(true, null, { "type": "updatePlayers", "players": Array.from(this.players.values()) });
         this.broadcast(true, null, { "type": "updateBullets", "bullets": Array.from(this.bullets.values()) });
-        this.broadcast(true, null, { "type": "updateTeamPoint", "teamPoint": this.teamPoint });
         this.tick();
     }
 
@@ -287,9 +280,22 @@ export class Game {
     }
 
     paintTile(color, tileX, tileY) {
+        if (this.map[tileY][tileX] === color || this.map[tileY][tileX] === "#") {
+            return;
+        }
         const nowStr = this.map[tileY];
         const newStr = nowStr.slice(0, tileX) + color + nowStr.slice(tileX + 1);
-        this.map[tileY] = newStr;
+        if (this.map[tileY][tileX] === ".") {
+            this.map[tileY] = newStr;
+            this.broadcast(true, null, { "type": "updateMap", "color": color, "tileX": tileX, "tileY": tileY });
+        } else if (this.map[tileY][tileX] === ENEMY_TEAM[color]) {
+            this.map[tileY] = newStr;
+            this.teamPoint[ENEMY_TEAM[color]]--;
+            this.broadcast(true, null, { "type": "updateMap", "color": color, "tileX": tileX, "tileY": tileY });
+        }
+        this.teamPoint[color]++;
+        this.broadcast(true, null, { "type": "updateTeamPoint", "teamPoint": this.teamPoint });
+        console.log(this.map);
     }
 
     checkPlayerWallCollision(nx, ny) {
