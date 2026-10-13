@@ -67,7 +67,7 @@ export class Game {
                 if (this.time - playerState.recoveredPowerTime >= PLAYER_POWER_COOLDOWN) {
                     playerState.power = Math.min(playerState.power + PLAYER_RECOVER_POWER, PLAYER_MAX_POWER);
                     playerState.recoveredPowerTime = this.time;
-                    sendTextFrame(socket, JSON.stringify({ "type": "updateYourPower", "power": playerState.power }));
+                    sendTextFrame(this.sockets.get(id), JSON.stringify({ "type": "updateYourPower", "power": playerState.power }));
                 }
             }
 
@@ -97,7 +97,8 @@ export class Game {
             if (playerInput.isPainting) {
                 if (playerState.power >= 5) {
                     playerState.power -= 5;
-                    sendTextFrame(socket, JSON.stringify({ "type": "updateYourPower", "power": playerState.power }));
+                    playerState.recoveredPowerTime = this.time;
+                    sendTextFrame(this.sockets.get(id), JSON.stringify({ "type": "updateYourPower", "power": playerState.power }));
                     this.paintTile(player.team, tileX, tileY);
                 }
             }
@@ -105,7 +106,8 @@ export class Game {
             if (playerInput.isShooting) {
                 if (this.time - playerState.shootedTime >= SHOOT_COOLDOWN && playerState.power >= 1) {
                     playerState.power -= 1;
-                    sendTextFrame(socket, JSON.stringify({ "type": "updateYourPower", "power": playerState.power }));
+                    playerState.recoveredPowerTime = this.time;
+                    sendTextFrame(this.sockets.get(id), JSON.stringify({ "type": "updateYourPower", "power": playerState.power }));
                     const bullet = {
                         id: id,
                         x: player.x + player.directionX * PLAYER_RADIUS,
@@ -142,15 +144,18 @@ export class Game {
                     break;
                 }
 
-                for (const player of this.players.values()) {
-                    if (player.team !== bullet.team && this.checkBulletPlayerCollision(bullet, player)) {
-                        player.hp -= BULLET_DAMAGE;
-                        if (player.hp <= 0) {
-                            this.broadcast(true, null, { "type": "playerDied", "died": player.id, "killer": bullet.id });
-                            player.hp = PLAYER_MAX_HP;
-                            player.x = (player.team === "R" ? TILE_SIZE * 1.5 : TILE_SIZE * (MAP_WIDTH - 1.5));
-                            player.y = (player.team === "R" ? TILE_SIZE * 1.5 : TILE_SIZE * (MAP_HEIGHT - 1.5));
+                for (const p of this.players.values()) {
+                    if (p.team !== bullet.team && this.checkBulletPlayerCollision(bullet, p)) {
+                        p.hp -= BULLET_DAMAGE;
+                        if (p.hp <= 0) {
+                            this.broadcast(true, null, { "type": "playerDied", "died": p.id, "killer": bullet.id });
+                            p.hp = PLAYER_MAX_HP;
+                            p.x = (p.team === "R" ? TILE_SIZE * 1.5 : TILE_SIZE * (MAP_WIDTH - 1.5));
+                            p.y = (p.team === "R" ? TILE_SIZE * 1.5 : TILE_SIZE * (MAP_HEIGHT - 1.5));
                             this.broadcast(true, null, { "type": "playerRespawn", "player": player });
+                            this.playerStates.get(p.id).power = PLAYER_MAX_POWER;
+                            this.playerStates.get(p.id).recoveredPowerTime = this.time;
+                            sendTextFrame(this.sockets.get(p.id), JSON.stringify({ "type": "updateYourPower", "power": this.playerStates.get(p.id).power }));
                         }
                         bullet.hasHit = true;
                         hasHit = true;
