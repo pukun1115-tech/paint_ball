@@ -99,6 +99,14 @@ import { PLAYER_MAX_POWER } from "./modules/config.js";
             addMessage("Connected to the server.");
             addMessage("Your ID: " + gameState.myId);
             addMessage("Your team: " + (gameState.players.get(gameState.myId).team === "R" ? "Red" : "Blue"));
+        } else if (data.type === "resetMap") {
+            for (let y = 0; y < gameState.map.length; y++) {
+                let newStr = "";
+                for (let x = 0; x < gameState.map[y].length; x++) {
+                    newStr += (gameState.map[y][x] === "#" ? "#" : ".");
+                }
+                gameState.map[y] = newStr;
+            }
         } else if (data.type === "chat") {
             addMessage(data.message);
         } else if (data.type === "updatePlayers") {
