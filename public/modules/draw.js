@@ -1,4 +1,12 @@
-import { PLAYER_MAX_HP, TILE_SIZE, PLAYER_RADIUS, BULLET_RADIUS, MAP_WIDTH, MAP_HEIGHT } from "./config.js";
+import {
+    PLAYER_MAX_HP,
+    PLAYER_MAX_POWER,
+    TILE_SIZE,
+    PLAYER_RADIUS,
+    BULLET_RADIUS,
+    MAP_WIDTH,
+    MAP_HEIGHT
+} from "./config.js";
 
 export function drawMap(ctx, you, map) {
     const centerX = ctx.canvas.width / 2;
@@ -50,7 +58,7 @@ export function drawPlayers(ctx, you, players) {
         ctx.stroke();
 
         if (players.get(p).isShooting) {
-            ctx.lineWidth = 6;
+            ctx.lineWidth = PLAYER_RADIUS * 3 / 8;
         }
 
         ctx.beginPath();
@@ -69,9 +77,9 @@ export function drawPlayers(ctx, you, players) {
         ctx.lineWidth = 1;
         ctx.strokeRect(playerCenterX - PLAYER_RADIUS, playerCenterY - PLAYER_RADIUS * 2, PLAYER_RADIUS * 2, PLAYER_RADIUS / 2);
 
-        if (players.get(p).hp >= 80) {
+        if (players.get(p).hp >= PLAYER_MAX_HP * 0.6) {
             ctx.fillStyle = "rgba(0, 255, 0, 0.5)";
-        } else if (players.get(p).hp >= 30) {
+        } else if (players.get(p).hp >= PLAYER_MAX_HP * 0.2) {
             ctx.fillStyle = "rgba(255, 255, 0, 0.5)";
         } else {
             ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
@@ -100,14 +108,14 @@ export function drawTeamPoint(ctx, teamPoint) {
 export function drawMyPower(ctx, myPower) {
     ctx.strokeStyle = "rgba(255, 255, 255, 1)";
     ctx.lineWidth = 2;
-    if (myPower >= 80) {
+    if (myPower >= PLAYER_MAX_POWER * 0.6) {
         ctx.fillStyle = "rgba(0, 255, 0, 0.5)";
-    } else if (myPower >= 30) {
+    } else if (myPower >= PLAYER_MAX_POWER * 0.2) {
         ctx.fillStyle = "rgba(255, 255, 0, 0.5)";
     } else {
         ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
     }
-    ctx.strokeRect(ctx.canvas.width - 36, ctx.canvas.height - 132, 24, 120);
-    const powerHeight = Math.max(0, Math.min(120, 120 * (myPower / 100)));
-    ctx.fillRect(ctx.canvas.width - 36, ctx.canvas.height - 12 - powerHeight, 24, powerHeight);
+    ctx.strokeRect(ctx.canvas.width - 32, ctx.canvas.height - 128, 24, 120);
+    const powerHeight = Math.max(0, Math.min(120, 120 * (myPower / PLAYER_MAX_POWER)));
+    ctx.fillRect(ctx.canvas.width - 32, ctx.canvas.height - 8 - powerHeight, 24, powerHeight);
 }

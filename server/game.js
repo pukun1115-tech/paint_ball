@@ -19,6 +19,8 @@ import {
     PLAYER_MAX_POWER,
     PLAYER_POWER_COOLDOWN,
     PLAYER_RECOVER_POWER,
+    PLAYER_SHOOT_COST,
+    PLAYER_PAINT_COST,
 } from "./config.js";
 
 export class Game {
@@ -34,6 +36,7 @@ export class Game {
         this.connections = {
             sockets: new Set(),
             playerIdsBySockets: new Map(),
+            socketsByPlayerIds: new Map(),
         };
     }
 
@@ -67,7 +70,7 @@ export class Game {
                 if (this.time - playerState.recoveredPowerTime >= PLAYER_POWER_COOLDOWN) {
                     playerState.power = Math.min(playerState.power + PLAYER_RECOVER_POWER, PLAYER_MAX_POWER);
                     playerState.recoveredPowerTime = this.time;
-                    sendTextFrame(this.connections.sockets.get(id), JSON.stringify({ "type": "updateYourPower", "power": playerState.power }));
+                    sendTextFrame(this.connections.socketsByPlayerIds.get(id), JSON.stringify({ "type": "updateYourPower", "power": playerState.power }));
                 }
             }
 
@@ -95,19 +98,21 @@ export class Game {
             }
 
             if (playerInput.isPainting) {
-                if (playerState.power >= 5) {
-                    playerState.power -= 5;
-                    playerState.recoveredPowerTime = this.time;
-                    sendTextFrame(this.connections.sockets.get(id), JSON.stringify({ "type": "updateYourPower", "power": playerState.power }));
-                    this.paintTile(player.team, tileX, tileY);
+                if (playerState.power >= PLAYER_PAINT_COST) {
+                    const painted = this.paintTile(player.team, tileX, tileY);
+                    if (painted) {
+                        playerState.power -= PLAYER_PAINT_COST;
+                        playerState.recoveredPowerTime = this.time;
+                        sendTextFrame(this.connections.socketsByPlayerIds.get(id), JSON.stringify({ "type": "updateYourPower", "power": playerState.power }));
+                    }
                 }
             }
 
             if (playerInput.isShooting) {
-                if (this.time - playerState.shootedTime >= SHOOT_COOLDOWN && playerState.power >= 1) {
-                    playerState.power -= 1;
+                if (this.time - playerState.shootedTime >= SHOOT_COOLDOWN && playerState.power >= PLAYER_SHOOT_COST) {
+                    playerState.power -= PLAYER_SHOOT_COST;
                     playerState.recoveredPowerTime = this.time;
-                    sendTextFrame(this.connections.sockets.get(id), JSON.stringify({ "type": "updateYourPower", "power": playerState.power }));
+                    sendTextFrame(this.connections.socketsByPlayerIds.get(id), JSON.stringify({ "type": "updateYourPower", "power": playerState.power }));
                     const bullet = {
                         id: id,
                         x: player.x + player.directionX * PLAYER_RADIUS,
@@ -152,10 +157,10 @@ export class Game {
                             p.hp = PLAYER_MAX_HP;
                             p.x = (p.team === "R" ? TILE_SIZE * 1.5 : TILE_SIZE * (MAP_WIDTH - 1.5));
                             p.y = (p.team === "R" ? TILE_SIZE * 1.5 : TILE_SIZE * (MAP_HEIGHT - 1.5));
-                            this.broadcast(true, null, { "type": "playerRespawn", "player": player });
+                            this.broadcast(true, null, { "type": "playerRespawn", "player": p });
                             this.playerStates.get(p.id).power = PLAYER_MAX_POWER;
                             this.playerStates.get(p.id).recoveredPowerTime = this.time;
-                            sendTextFrame(this.sockets.get(p.id), JSON.stringify({ "type": "updateYourPower", "power": this.playerStates.get(p.id).power }));
+                            sendTextFrame(this.connections.socketsByPlayerIds.get(p.id), JSON.stringify({ "type": "updateYourPower", "power": this.playerStates.get(p.id).power }));
                         }
                         bullet.hasHit = true;
                         hasHit = true;
@@ -255,8 +260,9 @@ export class Game {
 
     addPlayer(socket, player) {
         this.connections.sockets.add(socket);
-        this.players.set(player.id, player);
         this.connections.playerIdsBySockets.set(socket, player.id);
+        this.connections.socketsByPlayerIds.set(player.id, socket);
+        this.players.set(player.id, player);
         this.playerCount[player.team]++;
         this.playerInputs.set(player.id, {
             up: false,
@@ -300,15 +306,17 @@ export class Game {
             this.playerCount[team]--;
         }
         this.connections.sockets.delete(socket);
+        this.connections.playerIdsBySockets.delete(socket);
+        this.connections.socketsByPlayerIds.delete(playerId);
         this.players.delete(playerId);
         this.playerInputs.delete(playerId);
-        this.connections.playerIdsBySockets.delete(socket);
+        this.playerStates.delete(playerId);
         this.broadcast(false, socket, { type: "playerLeft", id: playerId });
     }
 
     paintTile(color, tileX, tileY) {
         if (this.map[tileY][tileX] === color || this.map[tileY][tileX] === "#") {
-            return;
+            return false;
         }
         const nowStr = this.map[tileY];
         const newStr = nowStr.slice(0, tileX) + color + nowStr.slice(tileX + 1);
@@ -322,7 +330,7 @@ export class Game {
         }
         this.teamPoint[color]++;
         this.broadcast(true, null, { "type": "updateTeamPoint", "teamPoint": this.teamPoint });
-        console.log(this.map);
+        return true;
     }
 
     checkPlayerWallCollision(nx, ny) {

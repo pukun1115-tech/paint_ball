@@ -33,15 +33,20 @@ export const PUBLIC_FILES = [
 
 export const PLAYER_MAX_HP = 100;
 export const PLAYER_HP_COOLDOWN = 30;
-export const PLAYER_MAX_POWER = 100;
-export const PLAYER_POWER_COOLDOWN = 300;
 export const PLAYER_RECOVER_HP = 1;
-export const PLAYER_RECOVER_POWER = 10;
+
+export const PLAYER_MAX_POWER = 150;
+export const PLAYER_POWER_COOLDOWN = 20;
+export const PLAYER_RECOVER_POWER = 5;
+export const PLAYER_SHOOT_COST = 1;
+export const PLAYER_PAINT_COST = 2;
+
 export const PLAYER_MOVE_SPEED = { own: 6, neutral: 4, enemy: 3 };
 export const TILE_SIZE = 64;
 export const PLAYER_RADIUS = 16;
 export const BULLET_RADIUS = 4;
 export const ENEMY_TEAM = { R: "B", B: "R" };
+
 export const SHOOT_COOLDOWN = 10;
 export const BULLET_SPEED = 48;
 export const BULLET_DAMAGE = 5;
