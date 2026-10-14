@@ -1,5 +1,5 @@
 import { addMessage, messageInput, sendButton, sendMessage } from "./modules/chat.js";
-import { drawMap, drawPlayers, drawBullets, drawTeamPoint, drawMyPower } from "./modules/draw.js";
+import { drawMap, drawPlayers, drawBullets, drawTeamPoint, drawMyPower, drawRemainingTime } from "./modules/draw.js";
 import { PLAYER_MAX_POWER } from "./modules/config.js";
 (() => {
     const websocketProtocol = ((window.location.protocol === "https:") ? "wss:" : "ws:");
@@ -26,6 +26,7 @@ import { PLAYER_MAX_POWER } from "./modules/config.js";
         myPower: 100,
         map: [],
         teamPoint: null,
+        remainingTime: null,
     };
 
     const keys = {};
@@ -132,6 +133,8 @@ import { PLAYER_MAX_POWER } from "./modules/config.js";
             gameState.players.set(data.player.id, data.player);
         } else if (data.type === "updateYourPower") {
             gameState.myPower = data.power;
+        } else if (data.type === "updateRemainingTime") {
+            gameStat.remainingTime = data.remainingTime;
         }
     });
 
@@ -204,6 +207,7 @@ import { PLAYER_MAX_POWER } from "./modules/config.js";
         drawPlayers(ctx, you, gameState.players);
         drawTeamPoint(ctx, gameState.teamPoint);
         drawMyPower(ctx, gameState.myPower);
+        drawRemainingTime(ctx, gameState.remainingTime);
     }
 
     function mainLoop() {
