@@ -46,6 +46,8 @@ export class Game {
     resetGame() {
         this.map = [...map];
         this.teamPoint = { "R": 0, "B": 0 };
+        this.remainingTime = 180;
+        this.broadcast(true, null, { type: "updateRemainingTime", remainingTime: this.remainingTime });
         this.broadcast(true, null, { type: "resetMap" });
         this.broadcast(true, null, { type: "updateTeamPoint", teamPoint: this.teamPoint });
         
