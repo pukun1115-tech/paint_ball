@@ -40,10 +40,12 @@ export class Game {
             socketsByPlayerIds: new Map(),
         };
 
-        this.resetTime = -1;
+        this.startTime = -1;
+        this.isMatchFinished: false;
     }
 
-    resetGame() {
+    startNewGame() {
+        this.isMatchFinished = false;
         this.map = [...map];
         this.teamPoint = { "R": 0, "B": 0 };
         this.remainingTime = 300;
@@ -67,12 +69,14 @@ export class Game {
     }
 
     update() {
-        if (this.time === this.resetTime) {
-            this.resetGame();
+        if (this.time === this.startTime) {
+            this.startNewGame();
         }
         
         if (this.remainingTime === 0) {
-            this.resetGame();
+            this.isMatchFinished = true;
+            this.broadcast(true, null, { type: "matchFinished", win: (this.teamPoint["R"] > this.teamPoint["B"] ? "R": (this.teamPoint["B"] > this.teamPoint["R"] ? "B": "DRAW")) });
+            this.startTime = this.time + 600;
         }
         
         for (const id of this.players.keys()) {
@@ -213,7 +217,7 @@ export class Game {
 
     tick() {
         this.time++;
-        if (this.time % 60 === 0) {
+        if (!this.isMatchFinished && this.time % 60 === 0) {
             this.remainingTime--;
             this.broadcast(true, null, { type: "updateRemainingTime", "remainingTime": this.remainingTime });
         }
@@ -247,14 +251,14 @@ export class Game {
 
         if (message.type === "chat") {
             if (message.message === "/reset") {
-                this.resetTime = this.time + 300;
-                this.broadcast(true, null, { type: "chat", message: "約5秒後にリセットされます。" });
+                this.startTime = this.time + 600;
+                this.broadcast(true, null, { type: "chat", message: "約10秒後に新しいゲームを始めます。" });
                 return;
             }
             if (message.message === "/cancel") {
-                if (this.resetTime > this.time) {
-                    this.resetTime = -1;
-                    this.broadcast(true, null, { type: "chat", message: "リセットがキャンセルされました。" });
+                if (this.startTime > this.time) {
+                    this.startTime = -1;
+                    this.broadcast(true, null, { type: "chat", message: "新しいゲームの開始がキャンセルされました。" });
                 }
                 return;
             }
@@ -369,6 +373,9 @@ export class Game {
     }
 
     paintTile(color, tileX, tileY) {
+        if (this.isMatchFinished) {
+            return false;
+        }
         if (this.map[tileY][tileX] === color || this.map[tileY][tileX] === "#") {
             return false;
         }
