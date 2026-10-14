@@ -41,11 +41,12 @@ export class Game {
         };
 
         this.startTime = -1;
-        this.isMatchFinished: false;
+        this.isMatchFinished = false;
     }
 
     startNewGame() {
         this.isMatchFinished = false;
+        this.startTime = -1;
         this.map = [...map];
         this.teamPoint = { "R": 0, "B": 0 };
         this.remainingTime = 300;
@@ -73,7 +74,7 @@ export class Game {
             this.startNewGame();
         }
         
-        if (this.remainingTime === 0) {
+        if (this.remainingTime === 0 && !this.isMatchFinished) {
             this.isMatchFinished = true;
             this.broadcast(true, null, { type: "matchFinished", win: (this.teamPoint["R"] > this.teamPoint["B"] ? "R": (this.teamPoint["B"] > this.teamPoint["R"] ? "B": "DRAW")) });
             this.startTime = this.time + 600;
