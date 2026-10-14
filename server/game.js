@@ -33,20 +33,20 @@ export class Game {
         this.teamPoint = { "R": 0, "B": 0 };
         this.playerCount = { "R": 0, "B": 0 };
         this.time = 0;
-        this.remainingTime = 180;
+        this.remainingTime = 120;
         this.connections = {
             sockets: new Set(),
             playerIdsBySockets: new Map(),
             socketsByPlayerIds: new Map(),
         };
 
-        this.resetTime = -100;
+        this.resetTime = -1;
     }
 
     resetGame() {
         this.map = [...map];
         this.teamPoint = { "R": 0, "B": 0 };
-        this.remainingTime = 180;
+        this.remainingTime = 120;
         this.broadcast(true, null, { type: "updateRemainingTime", remainingTime: this.remainingTime });
         this.broadcast(true, null, { type: "resetMap" });
         this.broadcast(true, null, { type: "updateTeamPoint", teamPoint: this.teamPoint });
@@ -56,7 +56,8 @@ export class Game {
             player.hp = PLAYER_MAX_HP;
             player.x = (player.team === "R" ? TILE_SIZE * 1.5 : TILE_SIZE * (MAP_WIDTH - 1.5));
             player.y = (player.team === "R" ? TILE_SIZE * 1.5 : TILE_SIZE * (MAP_HEIGHT - 1.5));
-            this.broadcast(true, null, { "type": "playerRespawn", "player": player });
+            this.broadcast(true, null, { type: "playerSpawn", player: player });
+            
             const playerState = this.playerStates.get(id);
             playerState.recoverdHpTime = this.time;
             playerState.power = PLAYER_MAX_POWER;
@@ -69,9 +70,11 @@ export class Game {
         if (this.time === this.resetTime) {
             this.resetGame();
         }
+        
         if (this.remainingTime === 0) {
             this.resetGame();
         }
+        
         for (const id of this.players.keys()) {
             const playerInput = this.playerInputs.get(id);
             if (playerInput === null || playerInput === undefined) {
@@ -184,11 +187,11 @@ export class Game {
                     if (p.team !== bullet.team && this.checkBulletPlayerCollision(bullet, p)) {
                         p.hp -= BULLET_DAMAGE;
                         if (p.hp <= 0) {
-                            this.broadcast(true, null, { "type": "playerDied", "died": p.id, "killer": bullet.id });
+                            this.broadcast(true, null, { type: "playerDied", died: p.id, killer: bullet.id });
                             p.hp = PLAYER_MAX_HP;
                             p.x = (p.team === "R" ? TILE_SIZE * 1.5 : TILE_SIZE * (MAP_WIDTH - 1.5));
                             p.y = (p.team === "R" ? TILE_SIZE * 1.5 : TILE_SIZE * (MAP_HEIGHT - 1.5));
-                            this.broadcast(true, null, { "type": "playerRespawn", "player": p });
+                            this.broadcast(true, null, { type: "playerSpawn", player: p });
                             this.playerStates.get(p.id).power = PLAYER_MAX_POWER;
                             this.playerStates.get(p.id).recoveredPowerTime = this.time;
                             this.sendYourPower(this.connections.socketsByPlayerIds.get(p.id), this.playerStates.get(p.id).power);
@@ -203,8 +206,8 @@ export class Game {
                 }
             }
         }
-        this.broadcast(true, null, { "type": "updatePlayers", "players": Array.from(this.players.values()) });
-        this.broadcast(true, null, { "type": "updateBullets", "bullets": Array.from(this.bullets.values()) });
+        this.broadcast(true, null, { type: "updatePlayers", players: Array.from(this.players.values()) });
+        this.broadcast(true, null, { type: "updateBullets", bullets: Array.from(this.bullets) });
         this.tick();
     }
 
@@ -212,7 +215,7 @@ export class Game {
         this.time++;
         if (this.time % 60 === 0) {
             this.remainingTime--;
-            this.broadcast(true, null, { "type": "updateRemainingTime", "remainingTime": this.remainingTime });
+            this.broadcast(true, null, { type: "updateRemainingTime", "remainingTime": this.remainingTime });
         }
     }
 
@@ -245,7 +248,14 @@ export class Game {
         if (message.type === "chat") {
             if (message.message === "/reset") {
                 this.resetTime = this.time + 300;
-                this.broadcast(true, null, { type: "chat", message: "サーバーの300フレーム後にリセットされます。" });
+                this.broadcast(true, null, { type: "chat", message: "約5秒後にリセットされます。" });
+                return;
+            }
+            if (message.meaaage === "/cancel") {
+                this.resetTime = -1;
+                if (this.resetTime > this.time) {
+                    this.broadcast(true, null, { type: "chat", message: "リセットがキャンセルされました。" });
+                }
                 return;
             }
             const playerId = this.connections.playerIdsBySockets.get(socket);
@@ -317,21 +327,19 @@ export class Game {
 
         this.playerStates.set(player.id, {
             shootedTime: this.time,
-            paintedTime: this.time,
             recoveredHpTime: this.time,
             power: PLAYER_MAX_POWER,
             recoveredPowerTime: this.time,
-
         });
         
         sendTextFrame(socket, JSON.stringify({
             type: "init",
             playerId: player.id,
+            remainingTime: this.remainingTime,
+            teamPoint: this.teamPoint,
             map: this.map,
             players: Array.from(this.players.values()),
             bullets: Array.from(this.bullets),
-            teamPoint: this.teamPoint,
-            remainingTime: this.remainingTime,
         }));
         this.sendYourPower(socket, this.playerStates.get(player.id).power);
         this.broadcast(false, socket, { type: "playerJoined", player: player });
