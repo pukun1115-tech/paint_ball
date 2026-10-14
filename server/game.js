@@ -271,6 +271,12 @@ export class Game {
                 }
                 return;
             }
+            if (message.message === "/114514") {
+                this.remainingTime = 10;
+                this.broadcast(true, null, { type: "chat", message: "残り時間が10秒になりました。" });
+                this.broadcast(true, null, { type: "updateRemainingTime", remainingTime: this.remainingTime });
+                return;
+            }
             const playerId = this.connections.playerIdsBySockets.get(socket);
             if (playerId !== undefined) {
                 this.broadcast(true, null, { type: "chat", message: `${playerId}: ${message.message}` });
