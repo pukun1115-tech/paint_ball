@@ -43,6 +43,7 @@ export class Game {
         this.startTime = -1;
         this.isMatchFinished = false;
         this.nextMatchTime = -1;
+        this.timeSet = null;
     }
 
     startNewGame() {
@@ -221,6 +222,11 @@ export class Game {
 
     tick() {
         this.time++;
+        if (this.timeSet !== null && !this.isMatchFinished) {
+            this.remainingTime = this.timeSet;
+            this.broadcast(true, null, { type: "updateRemainingTime", remainingTime: this.remainingTime });
+            this.timeSet = null;
+        }
         if (this.time % 60 === 0) {
             if (this.isMatchFinished) {
                 this.nextMatchTime--;
@@ -272,9 +278,8 @@ export class Game {
                 return;
             }
             if (message.message === "/114514") {
-                this.remainingTime = 10;
+                this.timeSet = 10;
                 this.broadcast(true, null, { type: "chat", message: "残り時間が10秒になりました。" });
-                this.broadcast(true, null, { type: "updateRemainingTime", remainingTime: this.remainingTime });
                 return;
             }
             const playerId = this.connections.playerIdsBySockets.get(socket);
