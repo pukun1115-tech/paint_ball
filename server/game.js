@@ -65,9 +65,9 @@ export class Game {
             this.broadcast(true, null, { type: "playerSpawn", player: player });
             
             const playerState = this.playerStates.get(id);
-            playerState.recoverdHpTime = this.time;
+            playerState.recoveredHpTime = this.time;
             playerState.power = PLAYER_MAX_POWER;
-            playerState.recoverdPowerTime = this.time;
+            playerState.recoveredPowerTime = this.time;
             this.sendYourPower(this.connections.socketsByPlayerIds.get(id), playerState.power);
         }
     }
