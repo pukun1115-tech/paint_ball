@@ -59,7 +59,7 @@ export class Game {
             playerState.recoverdHpTime = this.time;
             playerState.power = PLAYER_MAX_POWER;
             playerState.recoverdPowerTime = this.time;
-            this.sendYourPower(this.connections.socketsByPlayerIds.get(id), plyerState.power);
+            this.sendYourPower(this.connections.socketsByPlayerIds.get(id), playerState.power);
         }
     }
 
