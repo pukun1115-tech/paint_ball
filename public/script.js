@@ -27,6 +27,7 @@ import { PLAYER_MAX_POWER } from "./modules/config.js";
         map: [],
         teamPoint: null,
         remainingTime: null,
+        isMatchFinished: false,
     };
 
     const keys = {};
@@ -102,6 +103,9 @@ import { PLAYER_MAX_POWER } from "./modules/config.js";
             addMessage("Your ID: " + gameState.myId);
             addMessage("Your team: " + (gameState.players.get(gameState.myId).team === "R" ? "Red" : "Blue"));
         } else if (data.type === "resetMap") {
+            if (gameState.map === []) {
+                return;
+            }
             for (let y = 0; y < gameState.map.length; y++) {
                 let newStr = "";
                 for (let x = 0; x < gameState.map[y].length; x++) {
@@ -134,6 +138,10 @@ import { PLAYER_MAX_POWER } from "./modules/config.js";
             gameState.myPower = data.power;
         } else if (data.type === "updateRemainingTime") {
             gameState.remainingTime = data.remainingTime;
+        } else if (data.type === "matchFinish") {
+            gameState.isMatchFinished = true;
+        } else if (data.type === "matchStart") {
+            gameState.isMatchFinished = false;
         }
     });
 
