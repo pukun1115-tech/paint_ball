@@ -251,7 +251,7 @@ export class Game {
                 this.broadcast(true, null, { type: "chat", message: "約5秒後にリセットされます。" });
                 return;
             }
-            if (message.meaaage === "/cancel") {
+            if (message.message === "/cancel") {
                 if (this.resetTime > this.time) {
                     this.resetTime = -1;
                     this.broadcast(true, null, { type: "chat", message: "リセットがキャンセルされました。" });
