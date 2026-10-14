@@ -33,7 +33,7 @@ export class Game {
         this.teamPoint = { "R": 0, "B": 0 };
         this.playerCount = { "R": 0, "B": 0 };
         this.time = 0;
-        this.remainingTime = 120;
+        this.remainingTime = 300;
         this.connections = {
             sockets: new Set(),
             playerIdsBySockets: new Map(),
@@ -46,7 +46,7 @@ export class Game {
     resetGame() {
         this.map = [...map];
         this.teamPoint = { "R": 0, "B": 0 };
-        this.remainingTime = 120;
+        this.remainingTime = 300;
         this.broadcast(true, null, { type: "updateRemainingTime", remainingTime: this.remainingTime });
         this.broadcast(true, null, { type: "resetMap" });
         this.broadcast(true, null, { type: "updateTeamPoint", teamPoint: this.teamPoint });
