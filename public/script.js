@@ -28,6 +28,7 @@ import { PLAYER_MAX_POWER } from "./modules/config.js";
         teamPoint: null,
         remainingTime: null,
         isMatchFinished: false,
+        win: null,
     };
 
     const keys = {};
@@ -140,8 +141,10 @@ import { PLAYER_MAX_POWER } from "./modules/config.js";
             gameState.remainingTime = data.remainingTime;
         } else if (data.type === "matchFinish") {
             gameState.isMatchFinished = true;
+            gameState.win = data.win;
         } else if (data.type === "matchStart") {
             gameState.isMatchFinished = false;
+            gameState.win = null;
         }
     });
 
@@ -215,6 +218,26 @@ import { PLAYER_MAX_POWER } from "./modules/config.js";
         drawTeamPoint(ctx, gameState.teamPoint);
         drawMyPower(ctx, gameState.myPower);
         drawRemainingTime(ctx, gameState.remainingTime);
+        drawWin();
+    }
+
+    function drawWin() {
+        if (gameState.isMatchFinished) {
+            ctx.font = "bold 120px sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            if (gameState.win === "DRAW") {
+                ctx.fillText("DRAW", canvas.width / 2, canvas.height / 2);
+                return;
+            }
+            if (gameState.win === gameState.players.get(myId).team) {
+                ctx.fillStyle = "rgba(255, 0, 0, 0.8)";
+                ctx.fillText("WIN", canvas.width / 2, canvas.height / 2);
+            } else {
+                ctx.fillStyle = "rgba(63, 0, 191, 0.8)";
+                ctx.fillText("LOSE", canvas.width / 2, canvas.height / 2);
+            }
+        }
     }
 
     function mainLoop() {
