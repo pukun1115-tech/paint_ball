@@ -119,3 +119,14 @@ export function drawMyPower(ctx, myPower) {
     const powerHeight = Math.max(0, Math.min(120, 120 * (myPower / PLAYER_MAX_POWER)));
     ctx.fillRect(ctx.canvas.width - 32, ctx.canvas.height - 8 - powerHeight, 24, powerHeight);
 }
+
+export function drawRemainingTime(ctx, time) {
+    ctx.fillStyle = "rgba(191, 191, 191, 1)";
+    ctx.fillRect(8, 8, 120, 24);
+    
+    ctx.fillStyle = "rgba(255, 255, 255, 1)";
+    ctx.font = "24px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(time, 68, 20);
+}
