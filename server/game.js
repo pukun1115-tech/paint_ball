@@ -331,6 +331,7 @@ export class Game {
             players: Array.from(this.players.values()),
             bullets: Array.from(this.bullets),
             teamPoint: this.teamPoint,
+            remainingTime: this.remainingTime,
         }));
         this.sendYourPower(socket, this.playerStates.get(player.id).power);
         this.broadcast(false, socket, { type: "playerJoined", player: player });
