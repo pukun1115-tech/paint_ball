@@ -132,7 +132,7 @@ export class Game {
                     if (painted) {
                         playerState.power -= PLAYER_PAINT_COST;
                         playerState.recoveredPowerTime = this.time;
-                        this.sendYourPower(this.connections.socketsByPlayerIds.get(id), this.playerStates.get(p.id).power);
+                        this.sendYourPower(this.connections.socketsByPlayerIds.get(id), playerState.power);
                     }
                 }
             }
