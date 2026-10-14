@@ -227,6 +227,7 @@ import { PLAYER_MAX_POWER } from "./modules/config.js";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             if (gameState.win === "DRAW") {
+                ctx.fillStyle = "rgba(0, 255, 0, 0.8)";
                 ctx.fillText("DRAW", canvas.width / 2, canvas.height / 2);
                 return;
             }
