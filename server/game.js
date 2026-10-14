@@ -33,7 +33,7 @@ export class Game {
         this.teamPoint = { "R": 0, "B": 0 };
         this.playerCount = { "R": 0, "B": 0 };
         this.time = 0;
-        this.remainingTime = 300;
+        this.remainingTime = 60;
         this.connections = {
             sockets: new Set(),
             playerIdsBySockets: new Map(),
@@ -42,11 +42,13 @@ export class Game {
 
         this.startTime = -1;
         this.isMatchFinished = false;
+        this.nextMatchTime = -1;
     }
 
     startNewGame() {
         this.isMatchFinished = false;
         this.startTime = -1;
+        this.broadcast(true, null, { type: "matchStart" });
         this.map = [...map];
         this.teamPoint = { "R": 0, "B": 0 };
         this.remainingTime = 300;
@@ -76,8 +78,9 @@ export class Game {
         
         if (this.remainingTime === 0 && !this.isMatchFinished) {
             this.isMatchFinished = true;
-            this.broadcast(true, null, { type: "matchFinished", win: (this.teamPoint["R"] > this.teamPoint["B"] ? "R": (this.teamPoint["B"] > this.teamPoint["R"] ? "B": "DRAW")) });
-            this.startTime = this.time + 600;
+            this.nextMatchTime = 10;
+            this.broadcast(true, null, { type: "matchFinish", win: (this.teamPoint["R"] > this.teamPoint["B"] ? "R": (this.teamPoint["B"] > this.teamPoint["R"] ? "B": "DRAW")) });
+            this.startTime = this.time + this.nextMatchTime * 60;
         }
         
         for (const id of this.players.keys()) {
@@ -218,9 +221,14 @@ export class Game {
 
     tick() {
         this.time++;
-        if (!this.isMatchFinished && this.time % 60 === 0) {
-            this.remainingTime--;
-            this.broadcast(true, null, { type: "updateRemainingTime", "remainingTime": this.remainingTime });
+        if (this.time % 60 === 0) {
+            if (this.isMatchFinished) {
+                this.nextMatchTime--;
+                this.broadcast(true, null, { type: "updateRemainingTime", remainingTime: this.nextMatchTime });
+            } else {
+                this.remainingTime--;
+                this.broadcast(true, null, { type: "updateRemainingTime", remainingTime: this.remainingTime });
+            }
         }
     }
 
@@ -351,7 +359,7 @@ export class Game {
     }
 
     sendYourPower(socket, power) {
-        sendTextFrame(socket, JSON.stringify({ "type": "updateYourPower", "power": power }));
+        sendTextFrame(socket, JSON.stringify({ type: "updateYourPower", power: power }));
     }
 
     removePlayer(socket) {
@@ -384,14 +392,14 @@ export class Game {
         const newStr = nowStr.slice(0, tileX) + color + nowStr.slice(tileX + 1);
         if (this.map[tileY][tileX] === ".") {
             this.map[tileY] = newStr;
-            this.broadcast(true, null, { "type": "updateMap", "color": color, "tileX": tileX, "tileY": tileY });
+            this.broadcast(true, null, { type: "updateMap", color: color, tileX: tileX, tileY: tileY });
         } else if (this.map[tileY][tileX] === ENEMY_TEAM[color]) {
             this.map[tileY] = newStr;
             this.teamPoint[ENEMY_TEAM[color]]--;
-            this.broadcast(true, null, { "type": "updateMap", "color": color, "tileX": tileX, "tileY": tileY });
+            this.broadcast(true, null, { type: "updateMap", color: color, tileX: tileX, tileY: tileY });
         }
         this.teamPoint[color]++;
-        this.broadcast(true, null, { "type": "updateTeamPoint", "teamPoint": this.teamPoint });
+        this.broadcast(true, null, { type: "updateTeamPoint", teamPoint: this.teamPoint });
         return true;
     }
 
@@ -422,6 +430,9 @@ export class Game {
     }
 
     checkBulletPlayerCollision(bullet, player) {
+        if (this.isMatchFinished) {
+            return false;
+        }
         return checkCircleCircleCollision({ x: bullet.x, y: bullet.y, r: BULLET_RADIUS }, { x: player.x, y: player.y, r: PLAYER_RADIUS });
     }
 }
