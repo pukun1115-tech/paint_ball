@@ -134,7 +134,7 @@ import { PLAYER_MAX_POWER } from "./modules/config.js";
         } else if (data.type === "updateYourPower") {
             gameState.myPower = data.power;
         } else if (data.type === "updateRemainingTime") {
-            gameStat.remainingTime = data.remainingTime;
+            gameState.remainingTime = data.remainingTime;
         }
     });
 
