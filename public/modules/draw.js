@@ -124,8 +124,8 @@ export function drawRemainingTime(ctx, time) {
     ctx.fillStyle = "rgba(191, 191, 191, 1)";
     ctx.fillRect(8, 8, 120, 24);
     
-    ctx.fillStyle = "rgba(255, 255, 255, 1)";
-    ctx.font = "24px sans-serif";
+    ctx.fillStyle = "rgba(0, 0, 0, 1)";
+    ctx.font = "bold 24px sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(Math.floor(time / 60) + ((time % 60) < 10 ? ":0" + (time % 60) : ":" + (time % 60)), 68, 20);
