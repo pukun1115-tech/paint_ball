@@ -230,7 +230,7 @@ import { PLAYER_MAX_POWER } from "./modules/config.js";
                 ctx.fillText("DRAW", canvas.width / 2, canvas.height / 2);
                 return;
             }
-            if (gameState.win === gameState.players.get(myId).team) {
+            if (gameState.win === gameState.players.get(gameState.myId).team) {
                 ctx.fillStyle = "rgba(255, 0, 0, 0.8)";
                 ctx.fillText("WIN", canvas.width / 2, canvas.height / 2);
             } else {
