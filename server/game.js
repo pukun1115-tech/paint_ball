@@ -252,8 +252,8 @@ export class Game {
                 return;
             }
             if (message.meaaage === "/cancel") {
-                this.resetTime = -1;
                 if (this.resetTime > this.time) {
+                    this.resetTime = -1;
                     this.broadcast(true, null, { type: "chat", message: "リセットがキャンセルされました。" });
                 }
                 return;
