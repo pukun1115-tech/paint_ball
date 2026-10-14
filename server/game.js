@@ -141,7 +141,7 @@ export class Game {
                 if (this.time - playerState.shootedTime >= SHOOT_COOLDOWN && playerState.power >= PLAYER_SHOOT_COST) {
                     playerState.power -= PLAYER_SHOOT_COST;
                     playerState.recoveredPowerTime = this.time;
-                    this.sendYourPower(this.connections.socketsByPlayerIds.get(id), this.playerStates.get(p.id).power);
+                    this.sendYourPower(this.connections.socketsByPlayerIds.get(id), playerState.power);
                     const bullet = {
                         id: id,
                         x: player.x + player.directionX * PLAYER_RADIUS,
