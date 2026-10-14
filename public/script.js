@@ -93,6 +93,7 @@ import { PLAYER_MAX_POWER } from "./modules/config.js";
 
         if (data.type === "init") {
             gameState.myId = data.playerId;
+            gameState.remainingTime = data.remainingTime;
             gameState.map = data.map;
             gameState.bullets = new Set(data.bullets);
             gameState.teamPoint = data.teamPoint;
@@ -111,9 +112,7 @@ import { PLAYER_MAX_POWER } from "./modules/config.js";
         } else if (data.type === "chat") {
             addMessage(data.message);
         } else if (data.type === "updatePlayers") {
-            for (const p of data.players) {
-                gameState.players.set(p.id, p);
-            }
+            gameState.players = new Map(data.players.map(p => [p.id, p]));
         } else if (data.type === "updateBullets") {
             gameState.bullets = new Set(data.bullets);
         } else if (data.type === "updateMap") {
