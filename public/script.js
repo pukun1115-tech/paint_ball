@@ -128,7 +128,7 @@ import { PLAYER_MAX_POWER } from "./modules/config.js";
             gameState.players.delete(data.id);
         } else if (data.type === "playerDied") {
             addMessage(`${data.died} was killed by ${data.killer}.`);
-        } else if (data.type === "playerRespawn") {
+        } else if (data.type === "playerSpawn") {
             gameState.players.set(data.player.id, data.player);
         } else if (data.type === "updateYourPower") {
             gameState.myPower = data.power;
