@@ -128,5 +128,5 @@ export function drawRemainingTime(ctx, time) {
     ctx.font = "24px sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(time, 68, 20);
+    ctx.fillText(Math.floor(time / 60) + ":" + time % 60, 68, 20);
 }
