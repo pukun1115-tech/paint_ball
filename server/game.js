@@ -51,6 +51,7 @@ export class Game {
         this.startTime = -1;
         this.broadcast(true, null, { type: "matchStart" });
         this.map = [...map];
+        this.bullets = new Set();
         this.teamPoint = { "R": 0, "B": 0 };
         this.remainingTime = 300;
         this.broadcast(true, null, { type: "updateRemainingTime", remainingTime: this.remainingTime });
@@ -63,12 +64,9 @@ export class Game {
             player.x = (player.team === "R" ? TILE_SIZE * 1.5 : TILE_SIZE * (MAP_WIDTH - 1.5));
             player.y = (player.team === "R" ? TILE_SIZE * 1.5 : TILE_SIZE * (MAP_HEIGHT - 1.5));
             this.broadcast(true, null, { type: "playerSpawn", player: player });
-            
-            const playerState = this.playerStates.get(id);
-            playerState.recoveredHpTime = this.time;
-            playerState.power = PLAYER_MAX_POWER;
-            playerState.recoveredPowerTime = this.time;
-            this.sendYourPower(this.connections.socketsByPlayerIds.get(id), playerState.power);
+
+            this.resetPlayerInput(id);
+            this.resetPlayerState(id, this.connections.socketsByPlayerIds.get(id));
         }
     }
 
@@ -79,7 +77,8 @@ export class Game {
         
         if (this.remainingTime === 0 && !this.isMatchFinished) {
             this.isMatchFinished = true;
-            this.nextMatchTime = 10;
+            this.nextMatchTime = 15;
+            this.broadcast(true, null, { type: "updateRemainingTime", remainingTime: this.nextMatchTime });
             this.broadcast(true, null, { type: "matchFinish", win: (this.teamPoint["R"] > this.teamPoint["B"] ? "R": (this.teamPoint["B"] > this.teamPoint["R"] ? "B": "DRAW")) });
             this.startTime = this.time + this.nextMatchTime * 60;
         }
@@ -332,13 +331,8 @@ export class Game {
         this.addPlayer(socket, player);
     }
 
-    addPlayer(socket, player) {
-        this.connections.sockets.add(socket);
-        this.connections.playerIdsBySockets.set(socket, player.id);
-        this.connections.socketsByPlayerIds.set(player.id, socket);
-        this.players.set(player.id, player);
-        this.playerCount[player.team]++;
-        this.playerInputs.set(player.id, {
+    resetPlayerInput(id) {
+        this.playerInputs.set(id, {
             up: false,
             down: false,
             left: false,
@@ -348,13 +342,26 @@ export class Game {
             directionX: 1,
             directionY: 0,
         });
+    }
 
-        this.playerStates.set(player.id, {
+    resetPlayerState(id, socket) {
+        this.playerStates.set(id, {
             shootedTime: this.time,
             recoveredHpTime: this.time,
             power: PLAYER_MAX_POWER,
             recoveredPowerTime: this.time,
         });
+        this.sendYourPower(socket, this.playerStates.get(id).power);
+    }
+    
+    addPlayer(socket, player) {
+        this.connections.sockets.add(socket);
+        this.connections.playerIdsBySockets.set(socket, player.id);
+        this.connections.socketsByPlayerIds.set(player.id, socket);
+        this.players.set(player.id, player);
+        this.playerCount[player.team]++;
+        this.resetPlayerInput(player.id);
+        this.resetPlayerState(player.id, socket);
         
         sendTextFrame(socket, JSON.stringify({
             type: "init",
@@ -365,7 +372,6 @@ export class Game {
             players: Array.from(this.players.values()),
             bullets: Array.from(this.bullets),
         }));
-        this.sendYourPower(socket, this.playerStates.get(player.id).power);
         this.broadcast(false, socket, { type: "playerJoined", player: player });
     }
 
