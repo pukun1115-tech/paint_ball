@@ -68,7 +68,7 @@ import { PLAYER_MAX_POWER } from "./modules/config.js";
             event.preventDefault();
         }
     }, { passive: false });
-    
+
     function calculatePointerPosition(event) {
         const rect = canvas.getBoundingClientRect();
         inputState.pointerX = event.clientX - rect.left;
@@ -110,9 +110,6 @@ import { PLAYER_MAX_POWER } from "./modules/config.js";
             addMessage("Your ID: " + gameState.myId);
             addMessage("Your team: " + (gameState.players.get(gameState.myId).team === "R" ? "Red" : "Blue"));
         } else if (data.type === "resetMap") {
-            if (gameState.map === []) {
-                return;
-            }
             for (let y = 0; y < gameState.map.length; y++) {
                 let newStr = "";
                 for (let x = 0; x < gameState.map[y].length; x++) {
