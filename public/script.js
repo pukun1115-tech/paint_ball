@@ -63,6 +63,12 @@ import { PLAYER_MAX_POWER } from "./modules/config.js";
         socket.close();
     });
 
+    window.addEventListener("wheel", (event) => {
+        if (event.ctrlKey) {
+            event.preventDefault();
+        }
+    } { passive: false });
+    
     function calculatePointerPosition(event) {
         const rect = canvas.getBoundingClientRect();
         inputState.pointerX = event.clientX - rect.left;
