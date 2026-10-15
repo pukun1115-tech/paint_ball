@@ -67,7 +67,7 @@ import { PLAYER_MAX_POWER } from "./modules/config.js";
         if (event.ctrlKey) {
             event.preventDefault();
         }
-    } { passive: false });
+    }, { passive: false });
     
     function calculatePointerPosition(event) {
         const rect = canvas.getBoundingClientRect();
